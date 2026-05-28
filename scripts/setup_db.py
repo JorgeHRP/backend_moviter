@@ -26,9 +26,12 @@ HEADERS = {
 }
 
 
-def sql(query: str, label: str = ""):
+def sql(query: str, label: str = "", ignore_error: bool = False):
     resp = httpx.post(f"{URL}/pg/query", json={"query": query}, headers=HEADERS, timeout=30)
     if resp.status_code not in (200, 201):
+        if ignore_error:
+            print(f"  [SKIP] {label}: {resp.text[:120]}")
+            return
         print(f"[ERRO] {label}: {resp.text[:300]}")
         sys.exit(1)
     if label:
@@ -48,10 +51,10 @@ def rest_upsert(table: str, rows: list[dict], label: str = ""):
 # ── 1. Apagar tabelas existentes ──────────────────────────────────────────────
 
 print("\n[1/4] A apagar tabelas existentes...")
-sql("DROP TABLE IF EXISTS user_machines;",   "drop user_machines")
-sql("DROP TABLE IF EXISTS refresh_tokens;",  "drop refresh_tokens")
-sql("DROP TABLE IF EXISTS users;",           "drop users")
-sql("DROP TABLE IF EXISTS machines;",        "drop machines")
+sql("DROP TABLE IF EXISTS public.user_machines;",          "drop user_machines")
+sql("DROP TABLE IF EXISTS public.refresh_tokens;",         "drop refresh_tokens")
+sql("DROP TABLE IF EXISTS public.users CASCADE;",          "drop users",    ignore_error=True)
+sql("DROP TABLE IF EXISTS public.machines CASCADE;",       "drop machines")
 
 
 # ── 2. Criar tabelas novas ────────────────────────────────────────────────────
@@ -81,7 +84,7 @@ CREATE INDEX idx_machines_chassis     ON machines(chassis);
 """, "tabela machines")
 
 sql("""
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS public.users (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email       TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
