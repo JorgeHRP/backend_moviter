@@ -1,7 +1,7 @@
 """
 Equipment Orchestrator
-Ponto central que, dado um registo da BD, sabe qual API chamar,
-busca os dados e usa o adapter para normalizar.
+Dado os dados de uma máquina, determina o provider via tabela brands,
+busca telemetria e normaliza via adapter.
 """
 import asyncio
 from app.services import machines_db, hitachi, trackunit, johndeere
@@ -9,7 +9,6 @@ from app.adapters import equipment_adapter as adapter
 from app.models.equipment import EquipmentModel
 from app.db.cache import cache_get, cache_set
 from app.core.logging import get_logger
-from app.core.exceptions import UnsupportedBrandError
 
 logger = get_logger(__name__)
 
@@ -33,7 +32,7 @@ async def get_equipment(machine_db: dict, jd_access_token: str = None) -> Equipm
         return EquipmentModel(**cached)
 
     brand = (machine_db.get("marca") or "").upper().strip()
-    provider = machines_db.provider_for_brand(brand)
+    provider = await machines_db.get_provider_for_brand(brand)
     serial = machine_db.get("chassis", "")
 
     try:
@@ -100,7 +99,6 @@ async def _get_johndeere(machine_db: dict, serial: str, access_token: str | None
     org_id = orgs[0]["id"]
     equipments = await johndeere.get_equipment(access_token, org_id)
 
-    # Encontra o equipamento pelo serialNumber
     eq = next((e for e in equipments if e.get("serialNumber") == serial), None)
     if not eq:
         return adapter.from_db_only(machine_db)
@@ -112,20 +110,3 @@ async def _get_johndeere(machine_db: dict, serial: str, access_token: str | None
         johndeere.get_location_breadcrumbs(access_token, principal_id),
     )
     return adapter.from_johndeere(machine_db, eq, alerts, engine_hours, breadcrumbs)
-
-
-async def get_equipment_list_for_client(cod_cliente: str, jd_access_token: str = None) -> list[EquipmentModel]:
-    """Devolve todos os equipamentos de um cliente em paralelo."""
-    machines = await machines_db.get_machines_by_client(cod_cliente)
-    tasks = [get_equipment(m, jd_access_token) for m in machines]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    equipment_list = []
-    for m, r in zip(machines, results):
-        if isinstance(r, Exception):
-            logger.error(f"Erro para {m.get('num_maquina')}: {r}")
-            equipment_list.append(adapter.from_db_only(m))
-        else:
-            equipment_list.append(r)
-
-    return equipment_list

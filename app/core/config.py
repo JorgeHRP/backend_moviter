@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     PROEMION_MANAGEMENT_SERVICE_PATH: str = "/ws-proemion-management/2015/11/20/ManagementService"
     PROEMION_DATA_SERVICE_PATH: str = "/ws-proemion-data/DataService"
 
+    # Auth — client credentials
+    CLIENT_ID: str = ""
+    CLIENT_SECRET: str = ""
+    TOKEN_EXPIRE_HOURS: int = 24
+
     # Cache
     REDIS_URL: str = ""
     CACHE_TTL_SECONDS: int = 300

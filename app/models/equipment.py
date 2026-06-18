@@ -85,6 +85,21 @@ class EquipmentListResponse(BaseModel):
     total: int
 
 
+# ----- Input da requisição de telemetria -----
+
+class MachineInput(BaseModel):
+    """Dados da máquina enviados pelo app na requisição de telemetria."""
+    chassis: str               # serial number — usado pelas APIs externas
+    marca: str                 # determina qual provider consultar
+    num_maquina: str           # ID interno
+    modelo: Optional[str] = None
+    designacao: Optional[str] = None
+    familia: Optional[str] = None
+    localidade: Optional[str] = None
+    cod_cliente: Optional[str] = None
+    nome_cliente: Optional[str] = None
+
+
 # ----- Modelos internos da BD (máquinas da Moviter/Rocim) -----
 
 class MachineRecord(BaseModel):

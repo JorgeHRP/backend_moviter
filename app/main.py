@@ -10,7 +10,7 @@ from app.core.exceptions import (
     AuthenticationError,
     UnsupportedBrandError,
 )
-from app.api.v1 import equipment, clients, auth_johndeere, auth
+from app.api.v1 import equipment, auth_johndeere, auth
 
 settings = get_settings()
 logger = get_logger(__name__)
@@ -20,12 +20,11 @@ _is_dev = settings.APP_ENV == "development"
 app = FastAPI(
     title="Moviter Equipment API",
     description="API de telemetria de equipamentos — Moviter App",
-    version="1.0.0",
+    version="2.0.0",
     docs_url="/docs" if _is_dev else None,
     redoc_url="/redoc" if _is_dev else None,
 )
 
-# CORS — ajustar origins em produção
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if settings.APP_ENV == "development" else ["https://moviter.pt"],
@@ -37,7 +36,6 @@ app.add_middleware(
 # ── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(equipment.router, prefix="/api/v1")
-app.include_router(clients.router, prefix="/api/v1")
 app.include_router(auth_johndeere.router, prefix="/api/v1")
 
 
