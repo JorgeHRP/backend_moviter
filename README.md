@@ -83,10 +83,10 @@ python scripts/seed_machines.py
 
 ```bash
 # Desenvolvimento
-uvicorn app.main:app --reload --port 8000
+uvicorn app:app --reload --port 8000
 
 # Produção
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn app:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 Documentação interativa disponível em: http://localhost:8000/docs

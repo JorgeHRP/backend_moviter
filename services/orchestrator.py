@@ -4,11 +4,11 @@ Dado os dados de uma máquina, determina o provider via tabela brands,
 busca telemetria e normaliza via adapter.
 """
 import asyncio
-from app.services import machines_db, hitachi, trackunit, johndeere
-from app.adapters import equipment_adapter as adapter
-from app.models.equipment import EquipmentModel
-from app.db.cache import cache_get, cache_set
-from app.core.logging import get_logger
+from services import machines_db, hitachi, trackunit, johndeere
+from adapters import equipment_adapter as adapter
+from models.equipment import EquipmentModel
+from db.cache import cache_get, cache_set
+from core.logging import get_logger
 
 logger = get_logger(__name__)
 

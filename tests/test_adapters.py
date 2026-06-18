@@ -4,13 +4,13 @@ Uso: pytest tests/
 """
 import pytest
 from datetime import datetime, timezone
-from app.adapters.equipment_adapter import (
+from adapters.equipment_adapter import (
     from_hitachi,
     from_trackunit,
     from_db_only,
     _time_ago,
 )
-from app.models.equipment import EquipmentStatus
+from models.equipment import EquipmentStatus
 
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────

@@ -6,14 +6,14 @@ que a app mobile espera. É aqui que vive toda a lógica de mapeamento.
 from datetime import datetime, timezone
 from typing import Any
 
-from app.models.equipment import (
+from models.equipment import (
     EquipmentModel,
     EquipmentListItem,
     EquipmentStatus,
     AlertInfo,
     ErrorCode,
 )
-from app.core.logging import get_logger
+from core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -68,8 +68,8 @@ def from_hitachi(machine_db: dict, location: dict, daily: dict) -> EquipmentMode
     """
     has_telemetry = bool(location or daily)
 
-    brand = machine_db.get("marca", "HITACHI")
-    model = location.get("model_name") or machine_db.get("modelo") or machine_db.get("designacao", "")
+    brand = machine_db.get("marca") or "HITACHI"
+    model = location.get("model_name") or machine_db.get("modelo") or machine_db.get("designacao") or ""
     serial = location.get("pin_no") or daily.get("pin_no") or machine_db.get("chassis", "")
 
     # Horas totais acumuladas (body_hour_meter em horas)
@@ -81,7 +81,7 @@ def from_hitachi(machine_db: dict, location: dict, daily: dict) -> EquipmentMode
     # GPS
     lat = float(location.get("latitude") or 0) or None
     lon = float(location.get("longitude") or 0) or None
-    address = location.get("address") or machine_db.get("localidade", "")
+    address = location.get("address") or machine_db.get("localidade") or ""
 
     # Última comunicação — data da aquisição de dados ou do relatório diário
     last_comm_raw = (
@@ -102,7 +102,7 @@ def from_hitachi(machine_db: dict, location: dict, daily: dict) -> EquipmentMode
         id=machine_db.get("num_maquina", serial),
         brand=brand,
         model=model,
-        category=machine_db.get("familia", ""),
+        category=machine_db.get("familia") or "",
         serialNumber=serial,
         imageUrl=_image_for(brand, model),
         status=status,
@@ -139,8 +139,8 @@ def from_trackunit(
     can_faults: list[dict],
 ) -> EquipmentModel:
     """Constrói EquipmentModel a partir de dados Trackunit + registo da BD."""
-    brand = asset.get("brand") or machine_db.get("marca", "")
-    model = asset.get("model") or machine_db.get("modelo") or machine_db.get("designacao", "")
+    brand = asset.get("brand") or machine_db.get("marca") or ""
+    model = asset.get("model") or machine_db.get("modelo") or machine_db.get("designacao") or ""
     serial = asset.get("serialNumber") or machine_db.get("chassis", "")
 
     # Localização — GeoJSON usa [longitude, latitude]!
@@ -194,7 +194,7 @@ def from_trackunit(
         id=machine_db.get("num_maquina", serial),
         brand=brand,
         model=model,
-        category=machine_db.get("familia", ""),
+        category=machine_db.get("familia") or "",
         serialNumber=serial,
         imageUrl=_image_for(brand, model),
         status=status,
@@ -205,7 +205,7 @@ def from_trackunit(
         lastCommunication=last_comm_iso,
         telemetryUrl=None,
         operatorManualUrl=None,
-        location=machine_db.get("localidade", ""),
+        location=machine_db.get("localidade") or "",
         latitude=lat,
         longitude=lon,
         nextRevisionDays=None,
@@ -231,7 +231,7 @@ def from_johndeere(
 ) -> EquipmentModel:
     """Constrói EquipmentModel a partir de dados John Deere + registo da BD."""
     brand = "John Deere"
-    model = equipment.get("model") or machine_db.get("modelo") or machine_db.get("designacao", "")
+    model = equipment.get("model") or machine_db.get("modelo") or machine_db.get("designacao") or ""
     serial = equipment.get("serialNumber") or machine_db.get("chassis", "")
 
     # Horas
@@ -287,7 +287,7 @@ def from_johndeere(
         id=machine_db.get("num_maquina", serial),
         brand=brand,
         model=model,
-        category=machine_db.get("familia", ""),
+        category=machine_db.get("familia") or "",
         serialNumber=serial,
         imageUrl=_image_for(brand, model),
         status=status,
@@ -298,7 +298,7 @@ def from_johndeere(
         lastCommunication=last_comm_iso,
         telemetryUrl="https://operationscenter.deere.com",
         operatorManualUrl=None,
-        location=machine_db.get("localidade", ""),
+        location=machine_db.get("localidade") or "",
         latitude=lat,
         longitude=lon,
         nextRevisionDays=None,
@@ -317,13 +317,13 @@ def from_johndeere(
 
 def from_db_only(machine_db: dict) -> EquipmentModel:
     """Máquina sem telemetria disponível — dados mínimos da BD."""
-    brand = machine_db.get("marca", "")
-    model = machine_db.get("modelo") or machine_db.get("designacao", "")
+    brand = machine_db.get("marca") or ""
+    model = machine_db.get("modelo") or machine_db.get("designacao") or ""
     return EquipmentModel(
         id=machine_db.get("num_maquina", machine_db.get("chassis", "")),
         brand=brand,
         model=model,
-        category=machine_db.get("familia", ""),
+        category=machine_db.get("familia") or "",
         serialNumber=machine_db.get("chassis", ""),
         imageUrl=_image_for(brand, model),
         status=EquipmentStatus.no_telemetry,
@@ -334,7 +334,7 @@ def from_db_only(machine_db: dict) -> EquipmentModel:
         lastCommunication=datetime.now(timezone.utc).isoformat(),
         telemetryUrl=None,
         operatorManualUrl=None,
-        location=machine_db.get("localidade", ""),
+        location=machine_db.get("localidade") or "",
         latitude=None,
         longitude=None,
         nextRevisionDays=None,
